@@ -4,16 +4,16 @@
     \caption{Data access comparison between kernel first order and pixel first order for $K\times K$ convolution on $n\times p$ pixels}
       \begin{tabular}{|r|r|r|}
       \hline
-            & Kernel First & Pixel First \bigstrut\\
+            & Kernel First & Pixel First \\
       \hline
-      Input Feature Map & $n(p+K-1)^2$ & $npK^2$ \bigstrut\\
+      Input Feature Map & $n(p+K-1)^2$ & $npK^2$ \\
       \hline
       Weight & $nK^2$ & $K^2$ \bigstrut\\
       \hline
-      Output Feature Map Rd & 0 & $np(K^2-1)$ \bigstrut\\
+      Output Feature Map Rd & 0 & $np(K^2-1)$ \\
       \hline
-      Output Feature Map Wr & np & $npK^2$ \bigstrut\\
+      Output Feature Map Wr & $np$ & $np(K^2-1)$ \\
       \hline
-      \end{tabular}%
-    \label{tab:ram_acc}%
-  \end{table}%
+      \end{tabular}
+    \label{tab:ram_acc}
+  \end{table}
