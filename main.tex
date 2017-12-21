@@ -1,8 +1,8 @@
 % This is the tex file for ISVLSI16 submission
 % by Kaiyuan Guo
 
-%\documentclass{sig-alternate-05-2015}
-  \documentclass[10pt, conference]{IEEEtran}
+% \documentclass{sig-alternate-05-2015}
+\documentclass[10pt, conference]{IEEEtran}
     
     \usepackage{amsmath,amsfonts,amssymb}
     \usepackage{graphicx}
@@ -48,155 +48,14 @@
     \input{tex/introduction.tex}
     
     \input{tex/related_work.tex}
+
+    \input{tex/hardware.tex}
     
-    \section{Hardware Design}
-    This section introduces the CNN accelerator we adopt in this work. We first introduce the architecture and energy model, and then the optimization to release the RRAM buffer dynamic energy cost.
+    \input{tex/scheduling.tex}
     
-    \subsection{Architecture}
+    \input{tex/experiment.tex}
     
-    \begin{figure}[t]
-      \centering
-      \includegraphics[width=1\columnwidth]{fig/arch.pdf}
-      \caption{The CNN accelerator architecture. (a) The architecture mainly consists of a MAC array for computation and two levels of memory with on-chip buffers and external DDR. (b) Feature map buffer organization for sliding window data selection. (c) MAC array structure for an $A_{p\times m}\times B_{m\times n}$ matrix-matrix multiplication.}
-      \vspace{-15pt}
-      \label{fig:arch}
-    \end{figure}
-    
-    The overall architecture is shown in Figure~\ref{fig:arch}(a). The system adopts DDR as external memory to support enough memory space. The on-chip memory consists of two buffers: input/output buffer and weight buffer. Input and output buffer stores feature maps during the process of a CNN. As the output of one layer serves as the input of the next, the input data of MAC array can be chosen from both of the buffers by a MUX unit. All the buffers works in a double-buffer way to cover the off-chip data transfer time with calculation time.
-    
-    We first show how the process of CNN is parallelized with this design. As introduced in Section II A, a CNN layer consists of 4 nested loops. In this case, we unroll the feature map pixel loop, input channel loop and output channel loop as a $A_{p\times m}\times B_{m\times n}$ matrix-matrix multiplication. Each row of matrix A denotes the p pixels read from a feature map and each $B_{ij}$ denotes a pixel in the convolution kernel corresponds to input channel $i$ and output $j$. Thus the convolution of $p$ pixels with $K\times K$ convolution kernels will be done with $\lceil M/m\rceil*K^2$ steps. 
-    
-    To support the above function, a window selection function is needed for each channel stored in input/output buffer. In this design, we adopt the data mapping format as shown in Figure~\ref{fig:arch}(b). The pixels of each channel are stored in $p$ independent RAMs so that a size-$p$ window at any position can be selected from the buffer within a single cycle. Weight buffer can be implemented with a normal simple dual port RAM.
-    
-    The structure of the computation core is shown in Figure~\ref{fig:arch}(c). The array consists of $p\times n$ PEs. Each of the PE implements a size-$m$ vector inner product in a pipelined manner. Each PE has an accumulator for its result. 
-    
-    \subsection{Energy Model}
-    We only focuses on memory access energy, computation energy and background energy in this work. 
-    
-    For the memory access energy, we count the number of data read from or write to each buffer and multiplies them with a statistical energy cost generated from simulation tools. This highly relates to the schedule strategy because it decides how data is reused during the process of a CNN.
-    
-    For the computation energy, we calculate it by multiply the average energy cost of one operation, i.e. addition and multiplication, with the total number of operations in a network. So this part is fixed regardless of the schedule strategy or hardware design.
-    
-    For the background energy, we sum all the background power and multiplies it with the total processing time. The processing time of a network is given layer by layer, as the longer one between off-chip data transfer time and computation time.
-    
-    With the hardware design and the target network given, the computation energy cannot be optimized. Neither the background energy can be optimized if the system is not bounded by bandwidth. So we mainly focus on off-chip data transfer energy, which is decided by schedule strategy and the on-chip buffer energy for computation.
-    
-    \subsection{RRAM Buffer and Hardware Optimization}
-    Consider the data access pattern, implement input/output buffers with RRAM is not practical. First, they require high write bandwidth to receive computation results from fast on-chip logic. Second, they require a high random access bandwidth, not sequential access bandwidth. Compared with input/output buffer, weight buffer only requires a high sequential access bandwidth. So in this work, we only consider the case where weight buffer is implemented with RRAM.
-    
-    As RRAM has high read/write dynamic, we should try to reuse the weight to reduce access to weight buffer. Here we use a small buffer rather than a register for the accumulation in PE as shown in Figure~\ref{fig:arch}(c). Each time a weight is read from weight buffer, we can utilize the buffer to store intermediate result for different output pixels before moving on to the next weight. With a buffer of size $d$, the time a weight will be read from weight buffer is expressed as equation~\ref{eqt:nw_read}
-    
-    \begin{equation}\label{eqt:nw_read}
-      N_w = \lceil \lceil \frac{F_{out}.x * F_{out}.y}{p}\rceil \slash d \rceil
-    \end{equation}
-    
-    Though this method reduce weight access to approximately $1/d$, more buffer energy is needed as $d$ increases. We search for the optimal point in our experiment.
-    
-    \section{Scheduling Strategy}
-    In this section, we analyze schedule strategy, which decides the off-chip data transfer behavior during the process of a network. Three levels of schedule is considered: single layer, cross layer and network weight arrangement.
-    
-    \subsection{Single Layer Schedule Strategy}
-    
-    \begin{figure}[t]
-      \centering
-      \includegraphics[width=1\columnwidth]{fig/single_layer.pdf}
-      \caption{An example of how loop order affects data transfer behavior. Block $(i, j)$ denotes the computation for the $i^{th}$ feature map block on the $j^{th}$ channel. (a) Reuse feature map first and load each weight 3 times. (b) Reuse weight first and load each feature map 4 times.}
-      \label{fig:single_layer}
-    \end{figure}
-    
-    In the case where on-chip buffer size is smaller than the weight size and feature map size of a single layer, data needs to be loaded multiple times. An example is shown in Figure~\ref{fig:single_layer} where the weight buffer can hold only $1/4$ of the weight and input buffer can hold only $1/3$ of the feature maps. Choosing reuse weights or reuse feature map will cause difference on data transfer behavior and further affects the data transfer energy and data transfer time.
-    
-    \subsection{Cross Layer Schedule Strategy}
-    \begin{figure}[t]
-      \centering
-      \includegraphics[width=1\columnwidth]{fig/cross_layer.pdf}
-      \caption{An example of a cross layer schedule over 3 layers. (a) Single layer schedule. (b) Cross layer schedule.}
-      \label{fig:cross_layer}
-    \end{figure}
-    
-    As suggested by~\cite{alwani2016fused}, when the network is processed layer by layer, the result of one layer needs to be written back to external memory it is larger than the output buffer. But if the weight buffer is large enough to contain more than one layers' weight, these layers can be scheduled together to avoid writing the intermediate layers result to external memory. An example is shown in Figure~\ref{fig:cross_layer}, where the cross layer schedule avoids the second layer's feature map to be transferred to and from external memory. As we will implement weight buffer with RRAM, the size of weight buffer can be much larger and thus benefits from this strategy.
-    
-    \subsection{Network Weight Arrangement}
-    An observation is that if the weight buffer is large enough to hold all the layer's weight on-chip, no weight will need to be read from external memory. With a slightly smaller buffer, we can still follow this idea by fix some of the layer's weights in on-chip buffer to reduce external memory access. So we need to find which layers' weight is to be fixed in the buffer as to minimize the total energy cost.
-    
-    The solution space of this problem is a depth-$(n+1)$ binary tree. $n$ denotes the number of CNV layers in the network. To avoid searching the whole $O(2^n)$ solution space, we prune the binary tree with the buffer size limitation. If the the weights on a path already exceeds the weight buffer size, we ignore the search of its subtree. The pseudo code of the optimization process is as follows:
-    
-    \begin{codebox}
-    \Procname{\proc{SearchFixedWeight($layers$)}}
-    \li Let $is\_fixed[1 .. \attrib{layers}{size}]$ be a boolean vector
-    \li IterSearchFixedWeight($layers, 1, is\_fixed$)
-    \li \Return $is\_fixed$
-    \end{codebox}
-    
-    \begin{codebox}
-    \Procname{\proc{IterSearchFixedWeight($layers, n, f$)}}
-    \li \If $l > \attrib{layers}{size}$
-    \li	\Do
-         \Return OptEnergy($layers, f$)
-      \End
-    \li \If available buffer size $< \attrib{layers[n]}{weight\_size}$
-    \li	\Do
-         $f[n] = false$
-    \li 	\Return IterSearchFixedWeight($layers, n+1, f$)
-      \End
-    \li $f1 = f$; $f1[n] = false$
-    \li $f2 = f$; $f2[n] = true$
-    \li $e1 =$ IterSearchFixedWeight($layers, n+1, f1$)
-    \li $e2 =$ IterSearchFixedWeight($layers, n+1, f2$)
-    \li \If $e1 < e2$
-    \li	\Do
-         $f = f1$
-    \li 	\Return $e1$
-    \li	\Else
-    \li 	$f = f2$
-    \li 	\Return $e2$
-      \End
-    \end{codebox}
-    
-    \section{Experiments}
-    
-    \input{table/device}
-    
-    Experiments are carried out on the architecture introduced in Section III, with the scheduling strategy in section IV applied. Design space exploration is also done to optimize the energy cost of a state-of-the-art network.
-    
-    \subsection{Experiment setup}
-    The MAC array in the architecture is configured as an $8\times8\times8$ array running at 1GHz. This offers a peak performance of 1TOP/s. 8bit multiplication and 32bit accumulation is adopted in this model. Multiplication and addition energy is scaled down from the data in~\cite{mac_energy} to 22nm technology. 
-    
-    The above configuration requires the read bandwidth of input/output buffer and weight buffer to be at least 64GB/s. We implement each buffer with 8 banks and each of them should offer 8GB/s read bandwidth. On-chip memory parameters are generated from NVSim~\cite{dong2014nvsim} with different memory size configuration. To achieve enough bandwidth, RRAM buffer bit width is configured as 256bit. 
-    
-    The external memory parameter is generated from MICRON DDR4 power calculator~\cite{powercalc}. The generated dynamic I/O power is further converted to energy per read or write byte. In our experiment, we use 2 DDR chips as external memory because the bandwidth can support the configured MAC array with proposed schedule strategy and the size is enough. In order to reduce background power overhead, we use the least number of chips. All the detailed data and configuration is shown in Table~\ref{tab:device}. 
-    
-    The buffer in the accumulator is also considered in our experiments. 4 types of buffer is chosen for design space exploration. Corresponding parameters are generated by NVSim and are shown in Table~\ref{tab:small_buf}
-    
-    \input{table/small_buf}
-    
-    \subsection{DDR Access energy optimization}
-    
-    \begin{figure}[t]
-      \centering
-      \includegraphics[width=1\columnwidth]{fig/opt_res.pdf}
-      \caption{System energy with different level of schedule optimization. (a) Total system energy. (b)DRAM access energy.}
-      \label{fig:exp_strategy}
-    \end{figure}
-    
-    DDR access behavior is totally decided by schedule strategy. Here we use the convolution layers of VGG-11 to test the effectiveness of the schedule strategy optimization. Figure~\ref{fig:exp_strategy} shows the experimental results. Input/output buffer is 128KB SRAM and weight buffer varies from 1MB to 16MB RRAM in this experiment. Three levels of optimization is compared: only single layer schedule, cross layer schedule, cross layer schedule and consider fixing weight in buffer. When the weight buffer is small, the main energy saving comes from the cross layer schedule. When the buffer gets larger, fixing weight becomes more important. Up to $20\%$ energy saving can be achieved by the our schedule strategy optimization. From Figure~\ref{fig:exp_strategy}(b), we see that strategy optimization reduces the DDR access energy by $25\%\sim 98\%$ under different memory configurations.
-    
-    \subsection{On-chip buffer energy optimization}
-    From Figure~\ref{fig:exp_strategy}(a), we see that using a larger buffer is not better. This is caused by the increasing buffer I/O energy and leakage power. An example of energy breakdown is shown in Table~\ref{tab:ene_comp}. Both of the design adopts 1MB SRAM I/O buffer. The SRAM weight buffer is 128KB and the RRAM weight buffer is 1MB. Though the RRAM design has less DDR access energy because of a larger weight buffer, the weight buffer read energy is much higher. This shows the necessity of using buffer, rather than a single register, for accumulation. 
-    
-    \input{table/ene_comp}
-    
-    We still use the VGG-11 convolution layers to search for an optimal accumulator buffer depth. For each depth choice, we search the optimal buffer size configuration with all the schedule strategy optimization applied. The results are shown in Figure~\ref{fig:exp_buf_depth}. As can be seen from the figure, both methods benefits from the accumulation buffer, but the RRAM design benefits more. With the accumulation buffer, the total on-chip buffer energy cost can be reduced by $86\%$. Combining schedule optimization and accumulation buffer design, we can finally achieve $18\%$ energy reduction by introducing RRAM into on-chip buffer design.
-    
-    \begin{figure}[t]
-      \centering
-      \includegraphics[width=1\columnwidth]{fig/buf_size.pdf}
-      \caption{System energy with different accumulation buffer size. (a) System energy cost. (b) On-chip buffer energy cost.}
-      \label{fig:exp_buf_depth}
-    \end{figure}
-    
-    \section{Conclusion}
-    In this paper, we try to introduce RRAM into CNN accelerator on-chip buffer design. The accumulation buffer is introduced to relief the I/O energy overhead brought by RRAM. A set of schedule strategy optimizations is proposed to fully utilize the high storage density of RRAM. Experimental results show that by combining the hardware and software optimization and do design space exploration, $25\%\sim 98\%$ DRAM access energy and $86\%$ on-chip buffer energy can be saved. RRAM based design achieves 18$\%$ less system energy compared with an SRAM based design. Future work should focus on the rest part of the energy cost like the standby energy and the computation energy.
+    \input{tex/conclusion.tex}
     
     \small
     \bibliographystyle{IEEEtran}
