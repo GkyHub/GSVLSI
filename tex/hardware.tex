@@ -6,6 +6,7 @@ This section introduces the CNN accelerator we adopt in this work. We first intr
 \begin{figure}[t]
   \centering
   \includegraphics[width=1\columnwidth]{fig/arch.pdf}
+  \vspace{-5pt}
   \caption{The CNN accelerator architecture. (a) The architecture mainly consists of a MAC array for computation and two levels of memory with on-chip buffers and external DDR. (b) MAC array structure for an $A_{p\times m}\times B_{m\times n}$ matrix-matrix multiplication. (c) Feature map buffer organization for sliding window data selection.}
   \vspace{-15pt}
   \label{fig:arch}
@@ -28,14 +29,3 @@ Kernel first order computes the $K\times K$ convolution on the $p$ pixels with $
 \input{table/ram_acc.tex}
 
 Directly using input/output buffer to store the intermediate result is not feasible because the intermediate result for fixed-point multiplication requires more bits. As RRAM has high read/write dynamic, we should try to reuse the weight to reduce access to weight buffer. In this design, we use a local accumulation buffer of size $2n$ as show in Figure~\ref{fig:arch}(b) to enable $n$ pixel groups processed together before written back to input/output buffer. This introduce extra on-chip memory cost. We examine the area and energy overhead in our experiment.
-
-%\subsection{Energy Model}
-%We only focuses on memory access energy, computation energy and background energy in this work. 
-
-%For the memory access energy, we count the number of data read from or write to each buffer and multiplies them with a statistical energy cost generated from simulation tools. This highly relates to the schedule strategy because it decides how data is reused during the process of a CNN.
-
-%For the computation energy, we calculate it by multiply the average energy cost of one operation, i.e. addition and multiplication, with the total number of operations in a network. So this part is fixed regardless of the schedule strategy or hardware design.
-
-%For the background energy, we sum all the background power and multiplies it with the total processing time. The processing time of a network is given layer by layer, as the longer one between off-chip data transfer time and computation time.
-
-%With the hardware design and the target network given, the computation energy cannot be optimized. Neither the background energy can be optimized if the system is not bounded by bandwidth. So we mainly focus on off-chip data transfer energy, which is decided by schedule strategy and the on-chip buffer energy for computation.
