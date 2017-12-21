@@ -8,22 +8,24 @@ Various works explore energy efficient hardware designs for CNN accelerators. On
 
 One solution to reduce memory access is to perform in memory computing. RRAM cross bar based design is one of the popular research topics. Chi, et al. proposes the PRIME~\cite{chi2016prime} architecture which implements the matrix vector multiplication directly with the RRAM cross bar. Work by Cheng et al.~\cite{cheng2017time} implements the RRAM cross bar to support not only the inference but also the training phase of neural networks. In memory computation with RRAM shows great energy efficiency. But the application range of the design is limited by the scalability and computation accuracy of the RRAM cross bar.
 
-Another way to reduce off-chip data transfer is to implement large on-chip memory, where RRAM is a good candidate. We compare RRAM with SRAM and DRAM in Table~\ref{tab:ram}.
+Another way to reduce off-chip data transfer is to implement large on-chip memory, where RRAM is a good candidate. We compare RRAM with SRAM and DRAM in Table~\ref{tab:ram} according to the performance reported in \cite{ee598, fackenthal201419, dong2014nvsim}. Compared with SRAM, the storage density of RRAM is similar to DRAM, which is about $20\times$ higher. Compared with DRAM, RRAM can be integrated on-chip while the former one can not.
 
 \input{table/ram.tex}
 
-Compared with SRAM, the storage density of RRAM is much higher. A single SRAM bit can occupies more than $100\sim 200F^2$ area~\cite{ee598} while that of RRAM can be down to $6F^2$~\cite{fackenthal201419}, which is similar to DRAM. Compared with DRAM, RRAM can be integrated on-chip while the former one can not. These indicate that RRAM is a good candidate for large on-chip memory.
+But RRAM is also limited in some aspects. The first is the small bandwidth. For applications like CPU cache, where latency is critical to performance, RRAM may not be a good choice. For CNN, the data access pattern is static. This means we can design data storage to achieve sequential access at run-time. So we can use more banks to compensate for the limited bandwidth.
 
-But RRAM is also limited in some aspects. Compared with SRAM, RRAM needs much more read/write dynamic energy and has much smaller bandwidth and higher latency, especially on the write port. For applications like CPU cache, where latency is critical to performance, RRAM may not be a good choice. For CNN computation, we think these limitations can be relieved for the following reasons:
+The second is the high I/O dynamic energy cost. In this paper, we show that a simple implementation with RRAM increase the total system energy cost. But there is chance that we utilize the property of CNN computation to reduce on-chip memory access to overcome the energy overhead of using RRAM. 
+
 \begin{itemize}
-\item {The data access pattern can be organized beforehand. This means we care more on throughput rather than latency. More banks can be used to compensate for the bandwidth.}
-\item {The chance of data reuse in CNN computation means there will be much more memory read than memory write.}
+\item {The data access pattern is static. }
+\item {The weight sharing idea of CNN means we need much less memory access than computation.}
+\item {The high storage capacity of RRAM helps reduce memory refresh.}
 \end{itemize}
 
-In this paper, we introduce RRAM as on-chip memory for a typical CNN accelerator design to reduce the system energy cost. The contributions of this paper is as follows:
+In this paper, we introduce RRAM as the weight memory for a typical CNN accelerator design and optimize the design in hardware and scheduling level to overcome the RRAM energy overhead. The contributions of this paper is as follows:
 \begin{itemize}
-\item {Dedicated scheduling strategy optimization is proposed to fully utilize the RRAM buffer.}
 \item {Hardware optimization is proposed to reduce the RRAM dynamic energy overhead.}
+\item {Dedicated scheduling strategy optimization is proposed to fully utilize the RRAM buffer.}
 \item {Design space exploration is done with state-of-the-art networks to show the effect of using RRAM as on-chip buffer.}
 \end{itemize}
 Experimental results show that DDR access energy is reduced by $25\%\sim 98\%$ and on-chip buffer dynamic energy is reduced by $86\%$ on a state-of-the-art CNN model with the proposed methods. Introducing RRAM as on-chip buffer, the total energy cost of the system is reduced by $18\%$ compared with the optimal SRAM design.
