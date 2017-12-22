@@ -19,9 +19,9 @@ The second is the high I/O dynamic energy cost. In this paper, we show that a si
 In this paper, we introduce RRAM as the weight memory for a typical CNN accelerator design and optimize the design in hardware and scheduling level to overcome the RRAM energy overhead. The contributions of this paper is as follows:
 \begin{itemize}
 \item {Hardware optimization is proposed to reduce the RRAM dynamic energy overhead.}
-\item {Dedicated scheduling strategy optimization is proposed to fully utilize the RRAM buffer.}
+\item {Dedicated scheduling strategy optimization is proposed to fully utilize the large RRAM buffer to reduce off-chip data transfer.}
 \item {Design space exploration is done with state-of-the-art networks to show the effect of using RRAM as on-chip buffer.}
 \end{itemize}
-Experimental results show that RRAM based design saves $18\%$ system energy with a $15\%$ smaller on-chip RAM area compared with SRAM design. Introducing RRAM as on-chip buffer, the total energy cost of the system is reduced by $18\%$ compared with the optimal SRAM design.
+Experimental results on state-of-the-art CNN models show that RRAM based design saves $12-18\%$ system energy with a $15-75\%$ smaller on-chip RAM area compared with SRAM design. The proposed hardware and scheduling optimization reduces up to 96\% on-chip RAM access energy and 98\% off-chip data transfer.
 
 The rest of this paper is organized as follows: Section~\ref{sec:related} introduces the related work for CNN accelerator and RRAM research. Section~\ref{sec:hw} introduces the hardware design. The scheduling strategies are introduced in section~\ref{sec:schedule}. The experimental results are shown in section~\ref{sec:exp}. Section~\ref{sec:conclusion} concludes this paper.
