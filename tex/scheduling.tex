@@ -47,12 +47,6 @@ The solution space of this problem is a depth-$(n+1)$ binary tree. $n$ denotes t
 \li $f2 = f$; $f2[n] = true$
 \li $e1 =$ IterSearchFixedWeight($layers, n+1, f1$)
 \li $e2 =$ IterSearchFixedWeight($layers, n+1, f2$)
-\li \If $e1 < e2$
-\li	\Do
-     $f = f1$
-\li 	\Return $e1$
-\li	\Else
-\li 	$f = f2$
-\li 	\Return $e2$
-  \End
+\li $f = (e1 < e2)$ ? $f1$ : $f2$
+\li \Return Min(e1, e2)
 \end{codebox}
