@@ -12,9 +12,9 @@ Another way to reduce off-chip data transfer is to implement large on-chip memor
 
 \input{table/ram.tex}
 
-But RRAM is also limited in some aspects. The first is the small bandwidth. For applications like CPU cache, where latency is critical to performance, RRAM may not be a good choice. For CNN, the data access pattern is static. This means we can design data storage to achieve sequential access at run-time. So we can use more banks to compensate for the limited bandwidth.
+But RRAM is also limited in some aspects. First, the I/O bandwidth of RRAM is smaller than SRAM. For applications like CPU cache, where latency is critical to performance, RRAM may not be a good choice. For CNN, the data access pattern is static. This means we can design data storage to achieve sequential access at run-time. So we can use more banks to compensate for the limited bandwidth.
 
-The second is the high I/O dynamic energy cost. In this paper, we show that a simple implementation with RRAM increase the total system energy cost. But there is chance that we utilize the property of CNN computation to reduce on-chip memory access to overcome the energy overhead of using RRAM. 
+Second, the I/O dynamic energy cost of RRAM is high In this paper, we show that a simple implementation with RRAM increase the total system energy cost. But there is chance that we utilize the property of CNN computation to reduce on-chip memory access to overcome the energy overhead of using RRAM. 
 
 In this paper, we introduce RRAM as the weight memory for a typical CNN accelerator design and optimize the design in hardware and scheduling level to overcome the RRAM energy overhead. The contributions of this paper is as follows:
 \begin{itemize}
